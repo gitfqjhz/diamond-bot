@@ -216,15 +216,44 @@
 # 详细注释：
 # 用于测试 GitHub Actions 是否能访问目标服务器
 
+# 详细注释：
+# 这个脚本用于在 GitHub Actions 中单独测试登录接口是否可达。
+# 重点是：
+# 1. 显式设置 timeout，避免无限等待
+# 2. 打印请求地址、状态码、响应内容前几百字符
+# 3. 区分“连接失败”和“接口返回错误”
+
 import requests
+import json
 
-def test_connect():
+def test_login():
+    url = "http://111.230.160.82/v2/user/login"
+
+    payload = {
+        "username": "你的账号",
+        "password": "你的密码"
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
     try:
-        r = requests.get("http://111.230.160.82", timeout=10)
-        print("连接成功:", r.status_code)
+        print("开始请求:", url)
+        resp = requests.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=(10, 20)
+        )
+        print("状态码:", resp.status_code)
+        print("响应文本:", resp.text[:500])
+    except requests.exceptions.ConnectTimeout as e:
+        print("连接超时:", str(e))
+    except requests.exceptions.ReadTimeout as e:
+        print("读取超时:", str(e))
     except Exception as e:
-        print("连接失败:", str(e))
-
+        print("其他异常:", repr(e))
 
 if __name__ == "__main__":
-    test_connect()
+    test_login()
